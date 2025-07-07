@@ -37,6 +37,32 @@ void vm_get_indexes(void* virtual_address, uint32_t* dir_index, uint32_t* table_
 	*table_index = ((uint32_t) virtual_address % (PAGING_ENTRIES_PER_TABLE * PAGING_PAGE_SIZE) /  PAGING_PAGE_SIZE);
 }
 
+uint32_t vm_get_page(uint32_t* directory, void* virt)
+{
+	uint32_t dir_index = 0;
+	uint32_t table_index = 0;
+	vm_get_indexes(virt, &dir_index, &table_index);
+	uint32_t entry = directory[dir_index];
+	uint32_t* table = (uint32_t*)(entry & 0xfffff000);
+	return table[table_index];
+}
+
+int vm_set_page(uint32_t* directory, void* virt, val)
+{
+	uint32_t dir_index = 0;
+	uint32_t table_index = 0;
+	int res = vm_get_indexes(virt, &dir_index, &table_index);
+	if (res < 0)
+	{
+		return res;
+	}
+
+	uint32_t entry = directory[dir_index];
+	uint32_t* table = (uint32_t*)(entry & 0xfffff000);
+	table[table_index] = val;
+
+	return 0;
+}
 
 void free_vm_context(struct vm_context* vm)
 {
