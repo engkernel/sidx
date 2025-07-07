@@ -122,3 +122,20 @@ void buddy_free(void* ptr, uint8_t order)
 	page->next = free_lists[index];
 	free_lists[order] = page;
 }
+
+int size_to_order(size_t size)
+{
+	size_t pages = (size + PAGE_SIZE - 1) / PAGE_SIZE;
+	int order = 0;
+
+	while ((1 << order) < pages)
+		order++;
+
+	return order;
+}
+
+int addr_to_order(void* ptr)
+{
+	page_t* page = (page_t*)ptr;
+	return page->order;
+}

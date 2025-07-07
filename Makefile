@@ -40,6 +40,8 @@ all: ./bin/boot.bin ./bin/kernel.bin
 ./build/mm/buddy.o: ./src/mm/buddy.c
 	i686-elf-gcc $(INCLUDES) -I./src/mm $(FLAGS) -std=gnu99 -c ./src/mm/buddy.c -o ./build/mm/buddy.o
 
+./build/mm/kheap.o: ./src/mm/kheap.c
+	i686-elf-gcc $(INCLUDES) -I./src/mm $(FLAGS) -std=gnu99 -c ./src/mm/kheap.c -o ./build/mm/kheap.o
 
 ./build/io/io.s.o: ./src/arch/x86/io/io.s
 	as --32 --gstabs ./src/arch/x86/io/io.s -o ./build/io/io.s.o

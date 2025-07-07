@@ -12,5 +12,6 @@
 void buddy_init(uintptr_t base, size_t size);
 void* buddy_alloc(uint8_t order);
 void buddy_free(void* ptr, uint8_t order);
+int size_to_order(size_t size);
 
 #endif
