@@ -1,4 +1,4 @@
-FILES = ./build/boot/head.s.o ./build/kernel/kmain.o ./build/utils/string.o ./build/utils/vga.o ./build/utils/log.o ./build/mm/mm.o ./build/io/io.s.o ./build/interrupt/isr_wrapper.s.o ./build/interrupt/idt.s.o ./build/interrupt/isr.o ./build/interrupt/idt.o ./build/mm/mmap.o ./build/mm/pmm.o ./build/mm/buddy.o
+FILES = ./build/boot/head.s.o ./build/kernel/kmain.o ./build/utils/string.o ./build/utils/vga.o ./build/utils/log.o ./build/mm/mm.o ./build/io/io.s.o ./build/interrupt/isr_wrapper.s.o ./build/interrupt/idt.s.o ./build/interrupt/isr.o ./build/interrupt/idt.o ./build/mm/mmap.o ./build/mm/pmm.o ./build/mm/buddy.o ./build/task/task.s.o ./build/task/task.o
 INCLUDES = -I./src
 FLAGS = -g -ffreestanding -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -finline-functions -Wno-unused-function -fno-builtin -Werror -Wno-unused-label -Wno-cpp -Wno-unused-parameter -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -Iinc
 
@@ -40,6 +40,8 @@ all: ./bin/boot.bin ./bin/kernel.bin
 ./build/mm/buddy.o: ./src/mm/buddy.c
 	i686-elf-gcc $(INCLUDES) -I./src/mm $(FLAGS) -std=gnu99 -c ./src/mm/buddy.c -o ./build/mm/buddy.o
 
+./build/mm/kheap.o: ./src/mm/kheap.c
+	i686-elf-gcc $(INCLUDES) -I./src/mm $(FLAGS) -std=gnu99 -c ./src/mm/kheap.c -o ./build/mm/kheap.o
 
 ./build/io/io.s.o: ./src/arch/x86/io/io.s
 	as --32 --gstabs ./src/arch/x86/io/io.s -o ./build/io/io.s.o
@@ -58,6 +60,16 @@ all: ./bin/boot.bin ./bin/kernel.bin
 
 ./build/mm/mmap.o: ./src/arch/x86/mmap/mmap.c
 	i686-elf-gcc $(INCLUDES) -I./src/arch/x86/mmap $(FLAGS) -std=gnu99 -c ./src/arch/x86/mmap/mmap.c -o ./build/mm/mmap.o
+
+./build/task/tss.s.o: ./src/task/tss.s
+	as --32 --gstabs ./src/task/tss.s -o ./build/task/tss.s.o
+
+./build/task/task.s.o: ./src/task/task.s
+	as --32 --gstabs ./src/task/task.s -o ./build/task/task.s.o
+
+./build/task/task.o: ./src/task/task.c
+	i686-elf-gcc $(INCLUDES) -I./src/task $(FLAGS) -std=gnu99 -c ./src/task/task.c -o ./build/task/task.o
+
 
 clean: 
 	rm -rf ./bin/boot.bin

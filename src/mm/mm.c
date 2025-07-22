@@ -22,3 +22,4 @@ void* memcpy(void* dest, void* src, int len)
 	}
 	return dest;
 }
+
