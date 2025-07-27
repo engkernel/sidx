@@ -1,7 +1,7 @@
 #ifndef __TASK_H__
 #define __TASK_H__
-
 #include <stdint.h>
+#include "tss.h"
 
 typedef struct
 {
@@ -28,4 +28,5 @@ extern void task_init();
 extern void task_new(task_t* task, void(*)(), uint32_t flags, uint32_t* vm_dir);
 extern void task_switch(registers_t* old, registers_t* new);
 void do_it();
+
 #endif

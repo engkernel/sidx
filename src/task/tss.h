@@ -3,8 +3,10 @@
 
 #include <stdint.h>
 
+#define KERNEL_DATA_SELECTOR 0x10
+
 struct tss {
-	uint32_t link;
+	uint32_t prev_tss;
 	uint32_t esp0;
 	uint32_t ss0;
 	uint32_t esp1;
@@ -29,7 +31,12 @@ struct tss {
 	uint32_t fs;
 	uint32_t gs;
 	uint32_t ldt;
-	uint32_t trap;
-	uint32_t iomap_base;
+	uint16_t trap;
+	uint16_t iomap_base;
 }__attribute__((packed));
+
+void tss_load(uint16_t segment);
+void tss_init(struct tss* tss);
+
+
 #endif
