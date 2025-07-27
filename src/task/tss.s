@@ -1,14 +1,11 @@
 .code32
 .section .text
-
 .global tss_load
 
+# it does not reset the kernel but not sure if its correct
+# need to implement userspace to check
 tss_load:
-	push %ebp
-	mov %esp, %ebp
+    mov 8(%esp), %eax
+    ltr %ax
 
-	mov %ax, [%ebp+8]
-	ltr %ax
-
-	pop %ebp
-	ret
+    ret

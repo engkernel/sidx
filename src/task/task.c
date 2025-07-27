@@ -46,7 +46,7 @@ void task_yield()
 {
 	task_t* last = running_task;
 	running_task = running_task->next;
-	kinfo("running task %x", running_task->regs.esp);
+
 	task_switch(&last->regs, &running_task->regs);
 }
 
