@@ -34,11 +34,11 @@ get_e820_mmap:
 	jcxz .skipent
 	cmp $20, %cl
 	jbe .notext
-	testw $1, %es:20(%di)
+	testb $1, %es:20(%di)
 	je .skipent	
 .notext:
-	mov %es:8(%di), %ecx
-	or %es:12(%di), %ecx
+	movl %es:8(%di), %ecx
+	orl %es:12(%di), %ecx
 	jz .skipent
 	inc %bp
 	add $24, %di
