@@ -1,0 +1,27 @@
+CCFLAGS = -target i386-pc-none-elf
+
+ifndef BUILD_DIR
+$(error BUILD_DIR is not set)
+endif
+
+BOOT_DIR := $(BUILD_DIR)/boot
+SRCS := $(wildcard *.S)
+OBJS := $(patsubst %.S,$(BOOT_DIR)/%.o,$(SRCS))
+
+$(BOOT_DIR)/%.o: %.S | $(BOOT_DIR)
+	$(CC) -c $(CCFLAGS) $< -o $@
+
+all: $(BOOT_DIR)/boot.bin
+
+$(BOOT_DIR)/boot.elf: $(OBJS)
+	$(LD) -m elf_i386 -T boot.ld -o $@ $^
+
+$(BOOT_DIR)/boot.bin: $(BOOT_DIR)/boot.elf
+	llvm-objcopy-19 -O binary $< $@
+
+$(BOOT_DIR):
+	mkdir -p $@
+
+.PHONY: clean
+clean:
+	rm -rf $(BOOT_DIR)
