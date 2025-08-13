@@ -4,14 +4,14 @@ ifndef BUILD_DIR
 $(error BUILD_DIR is not set)
 endif
 
-BOOT_DIR := $(BUILD_DIR)/boot
+BOOT_DIR := $(BUILD_DIR)/bootloader
 SRCS := $(wildcard *.S)
 OBJS := $(patsubst %.S,$(BOOT_DIR)/%.o,$(SRCS))
 
+all: $(BOOT_DIR)/boot.bin
+
 $(BOOT_DIR)/%.o: %.S | $(BOOT_DIR)
 	$(CC) -c $(CCFLAGS) $< -o $@
-
-all: $(BOOT_DIR)/boot.bin
 
 $(BOOT_DIR)/boot.elf: $(OBJS)
 	$(LD) -m elf_i386 -T boot.ld -o $@ $^
