@@ -1,8 +1,4 @@
-ASFLAGS = -target i386-pc-none-eabi -m32
-
-ifndef BUILD_DIR
-$(error BUILD_DIR is not set)
-endif
+include $(PROJECT_ROOT)/config.mk
 
 BOOT_DIR := $(BUILD_DIR)/boot
 
@@ -15,7 +11,7 @@ C_OBJS := $(patsubst %.c,$(BOOT_DIR)/%.o,$(C_SRCS))
 all: $(AS_OBJS) $(C_OBJS)
 
 $(BOOT_DIR)/%.o: %.S | $(BOOT_DIR)
-	$(CC) -c $(ASFLAGS) $< -o $@
+	$(CC) -c $(TARGET) $< -o $@
 
 $(BOOT_DIR)/%.o: %.c | $(BOOT_DIR)
 	$(CC) -c $(CCFLAGS) $< -o $@

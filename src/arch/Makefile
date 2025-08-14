@@ -1,3 +1,5 @@
+include $(PROJECT_ROOT)/config.mk
+include $(PROJECT_ROOT)/mk/common.mk
 
 all:
-	$(MAKE) -C $(ARCH) CC=$(CC) LD=$(LD) BUILD_DIR=$(BUILD_DIR)
+	$(MAKE) -C $(ARCH) 
