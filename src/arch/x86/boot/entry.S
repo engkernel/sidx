@@ -1,6 +1,7 @@
 .code32
-.section .text
+.section .text.boot
 .global _start
+.extern kmain
 
 .set KERNEL_DS, 0x10
 

@@ -15,23 +15,20 @@ all: subdirs link bin
 subdirs:
 	$(MAKE) -C src 
 
-OBJS := $(shell find $(BUILD_DIR) -name '*.o' ! -path '$(BUILD_DIR)/bootloader/*' )
+#OBJS := $(shell find $(BUILD_DIR) -name '*.o' ! -path '$(BUILD_DIR)/bootloader/*' )
 
 
-link: $(OBJS)
-	$(LD) -m elf_i386 -T src/linker.ld --Map=$(BUILD_DIR)/kernel.map -nostdlib -o $(KERNEL_ELF) $(OBJS)
+link:
+	$(LD) -m elf_i386 -T src/linker.ld --Map=$(BUILD_DIR)/kernel.map -nostdlib -o $(KERNEL_ELF) $(shell find $(BUILD_DIR) -name '*.o' ! -path '$(BUILD_DIR)/bootloader/*')
 	llvm-objcopy-19 -O binary $(KERNEL_ELF) $(BUILD_DIR)/kernel.bin
 
-bin:  $(KERNEL_ELF) $(BOOTLOADER_BIN)
-	# we create a empty image
-	dd if=/dev/zero of=$(OS_IMAGE) bs=512 count=100 status=none
-
-	dd if=$(BOOTLOADER_BIN) of=$(OS_IMAGE) bs=512 count=1 conv=notrunc status=none
-
-	dd if=$(KERNEL_BIN) of=$(OS_IMAGE) bs=512 seek=1 conv=notrunc status=none	
-
+bin: $(KERNEL_ELF) $(BOOTLOADER_BIN)
+	rm -rf $(OS_IMAGE)
+	dd if=$(BOOTLOADER_BIN) >> $(OS_IMAGE)
+	dd if=$(KERNEL_BIN) >> $(OS_IMAGE)
+	dd if=/dev/zero bs=1048576 count=16 >> $(OS_IMAGE)
 
 .PHONY: clean
 clean:
-	$(MAKE) -C src clean BUILD_DIR=$(BUILD_DIR)
+	$(MAKE) -C src clean
 	rm -f $(BUILD_DIR)/kernel.elf

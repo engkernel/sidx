@@ -18,3 +18,7 @@ $(BOOT_DIR)/%.o: %.c | $(BOOT_DIR)
 
 $(BOOT_DIR):
 	mkdir -p $@ 
+
+.PHONY: clean
+clean:
+	rm -rf $(BOOT_DIR)

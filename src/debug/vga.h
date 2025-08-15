@@ -15,7 +15,7 @@ extern const int log_level_colour[];
 
 void vga_init();
 void kputc(int level, char c);
-void kputs(int level, const char* str);
+void kputs(int level, char* str);
 
 void scroll_up();
 

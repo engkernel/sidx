@@ -1,6 +1,6 @@
 #include "log.h"
 #include "vga.h"
-#include "string.h"
+#include "lib/string.h"
 
 #include <stdarg.h>
 #include <stdint.h>
@@ -182,7 +182,7 @@ void static __printf(int level, const char *fmt, va_list args)
 		}
 		case 's':
 		{
-			kputs(level, va_arg(args, const char *));
+			kputs(level, va_arg(args, char *));
 		}
 		default:
 			break;

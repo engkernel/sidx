@@ -1,5 +1,5 @@
 #include "vga.h"
-#include "string.h"
+#include "lib/string.h"
 #include <stdint.h>
 #include <stddef.h>
 
@@ -65,7 +65,7 @@ void kputc(int level, char c)
 	__kputc(level, c);
 }
 
-static void __kputs(int level, const char* str)
+static void __kputs(int level, char* str)
 {
 	if (!str)
 		return;
@@ -76,7 +76,7 @@ static void __kputs(int level, const char* str)
 	}
 }
 
-void kputs(int level, const char* str)
+void kputs(int level, char* str)
 {
 	__kputs(level, str);
 }

@@ -13,4 +13,8 @@ $(KERNEL_DIR)/%.o: %.c | $(KERNEL_DIR)
 $(KERNEL_DIR):
 	mkdir -p $@
 
+.PHONY: clean
+clean:
+	rm -rf $(KERNEL_DIR)
+
 	

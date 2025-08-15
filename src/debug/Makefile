@@ -12,3 +12,7 @@ $(DEBUG_DIR)/%.o: %.c | $(DEBUG_DIR)
 
 $(DEBUG_DIR):
 	mkdir -p $@
+
+.PHONY: clean
+clean:
+	rm -rf $(DEBUG_DIR)

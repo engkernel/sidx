@@ -1,7 +1,7 @@
 .code16
 .global _start
 
-.set KERNEL_CS, 0x8
+.set KERNEL_CS, 0x08
 .set KERNEL_DS, 0x10
 
 _start:
@@ -46,7 +46,7 @@ gdtr:
 .set TOTAL_SECT, 100
 .set TOTAL_WORD, 256
 /* where in memory write */
-.set DEST_ADDR, 0x0100000
+.set DEST_ADDR, 0x00100000
 
 protected_mode:
 	/* enable A20 line */
@@ -111,5 +111,6 @@ try_read:
 	loop next_sector
 	ret
 
-.fill 510-(.-_start),1,0
+#.fill 510-(.-_start),1,0
+.org 510
 	.word 0xaa55
