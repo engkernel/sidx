@@ -1,4 +1,4 @@
-SUBDIRS := $(filter-out .,$(wildcard */))
+SUBDIRS := $(filter-out include/,$(wildcard */))
 
 all:
 	@for dir in $(SUBDIRS); do \

@@ -1,9 +1,46 @@
-#include "log.h"
-#include "vga.h"
-#include "lib/string.h"
+#include "include/log.h"
+#include "include/string.h"
+#include "include/arch.h"
 
 #include <stdarg.h>
 #include <stdint.h>
+
+const char* log_level_prefix[] = 
+{
+	[LOG_INFO] = "[INFO]",
+	[LOG_ERR] = "[ERROR]"
+};
+
+static void kputc(int level, char c)
+{
+	if (level < LOG_INFO || level > LOG_ERR)
+	{
+		level = LOG_ERR;
+	}
+
+	if (c == '\n')
+	{
+		vga_new_line();
+		return;
+	}
+	else if (c == '\t')
+	{
+		vga_tab();
+		return;
+	}
+	vga_put(level, c);
+}
+
+static void kputs(int level, char* str)
+{
+	if (!str)
+		return;
+
+	size_t len = strlen(str);
+
+	for (int i = 0; i < len; i++)
+		kputc(level, str[i]);
+}
 
 void static __print_udec32(int level, uint32_t num)
 {

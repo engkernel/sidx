@@ -13,6 +13,7 @@ KERNEL_BIN := $(BUILD_DIR)/kernel.bin
 all: subdirs link bin
 
 subdirs:
+	$(MAKE) -C bootloader
 	$(MAKE) -C src 
 
 #OBJS := $(shell find $(BUILD_DIR) -name '*.o' ! -path '$(BUILD_DIR)/bootloader/*' )
@@ -30,5 +31,8 @@ bin: $(KERNEL_ELF) $(BOOTLOADER_BIN)
 
 .PHONY: clean
 clean:
+	$(MAKE) -C bootloader clean
 	$(MAKE) -C src clean
 	rm -f $(BUILD_DIR)/kernel.elf
+	rm -f $(BUILD_DIR)/kernel.bin
+	rm -f $(BUILD_DIR)/os.bin

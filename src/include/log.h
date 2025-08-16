@@ -1,7 +1,7 @@
 #ifndef LOG_H
 #define LOG_H
 
-#include "vga.h"
+#include "include/configs.h"
 
 void vprintf(int level, const char* fmt, ...);
 
