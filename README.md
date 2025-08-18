@@ -11,4 +11,4 @@
 - mk/common.mk: validations of exist of variables to prevent destructive actions(like removing $(BUILD_DIR)/boot in case BUILD_DIR has not been set)
 
 # Notes
-- Empty
+- With multiple try, I saw fault in my folder structure as it was more monolothic and heavy or nested. So I review structure and focus on minimalistic design.
