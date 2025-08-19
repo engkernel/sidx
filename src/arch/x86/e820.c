@@ -10,6 +10,7 @@ struct e820_entry {
     uint64_t base;
     uint64_t len;
     uint32_t type;
+    uint32_t acpi;
 } __attribute__((packed));
 
 /* ===================== Functions ========================*/
@@ -19,7 +20,8 @@ void e820_init()
 	struct e820_entry *entries = (struct e820_entry*) E820_ENTRIES_BUFFER;
 	for (int i = 0; i < e820_total; i++)
 	{
-			kinfo("base %x, len %x, type %d", entries[i].base, entries[i].len, (uint32_t)entries[i].type);
+		if (entries[i].type == 1)
+			kinfo("base %lx, len %lx, type %d", entries[i].base, entries[i].len, (uint32_t)entries[i].type);
 	}
 }
 
