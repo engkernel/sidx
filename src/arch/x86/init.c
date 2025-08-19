@@ -15,6 +15,9 @@ void arch_init()
 	/* interrupts and lidt initialize */
 	traps_init();
 
+	/* get memory maps */
+	e820_init();
+
 	/* enable interrupts as arch initialized */
 	enable_interrupts();
 }

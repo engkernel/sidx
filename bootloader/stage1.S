@@ -1,4 +1,5 @@
 .code16
+.section .text.boot
 .global _start
 
 .set KERNEL_CS, 0x08
@@ -8,9 +9,13 @@ _start:
 	ljmp $0, $real_mode
 	nop
 
+/* 16-bit code, include in boot.S, _start long jump will prevent for overwriting */
+#include "e820.S"
+
 real_mode:
 	/* intel docs page 3353 */
 	cli
+	call e820_start
 	xor %ax, %ax
 	movw %ax, %dx
 	movw %ax, %es
@@ -111,6 +116,5 @@ try_read:
 	loop next_sector
 	ret
 
-#.fill 510-(.-_start),1,0
 .org 510
 	.word 0xaa55

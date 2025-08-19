@@ -43,6 +43,8 @@ static inline void disable_interrupts()
 }
 
 /* mmu */
+/* e820 memory maps */
+void e820_init();
 
 /* */
 #endif

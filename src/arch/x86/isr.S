@@ -2,12 +2,12 @@
 .code32
 .section .text
 
-.extern empty_isr
+.extern empty_handler
 
-.global isr_wrapper
-.type isr_wrapper, @function
+.global empty_isr
+.type empty_isr, @function
 
-isr_wrapper:
+empty_isr:
 	pushl %eax
 	pushl %ecx
 	pushl %edx

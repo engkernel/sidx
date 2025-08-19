@@ -58,7 +58,7 @@ struct idt idtr;
 /* ======================== Prototypes ====================*/
 
 /* interrupts */
-extern void isr_wrapper();
+extern void empty_isr();
 
 /* ======================== Functions =====================*/
 
@@ -115,31 +115,39 @@ void pic_disable(void)
 }
 
 /* isr handlers */
-void empty_isr()
+void empty_handler()
 {
 	/* just do nothing and send EOI */
 	outb(0x20, 0x20);
 }
 
+static inline void idt_set_entry(struct idt_entry *entry, uint16_t handler)
+{
+	entry->low_offset = (uint16_t)(handler & 0xffff);
+	entry->selector = KERNEL_CS;
+	entry->zero = 0x00;
+	entry->type_attributes = 0x8E; /* interrupt gate */
+	entry->high_offset = (uint16_t)(handler >> 16);
+
+}
+
 /* traps initialize */
 void traps_init()
 {
+	const uint32_t addr = (uint32_t) empty_isr;
+
 	/* remap PIC */
 	pic_remap(PIC_OFFSET_VEC);
 
 	/* init idt desc and set handler interrupts */
 	memset(idt_entries, 0, sizeof(idt_entries));
-	idtr.size = sizeof(idt_entries) - 1;
+	idtr.size = (uint16_t)(sizeof(idt_entries) - 1);
 	idtr.base = (uint32_t)idt_entries;
 
+	/* we override all interrupts handlers intentionally */
 	for (int i = 0; i < TOTAL_INTERRUPTS; i++)
 	{
-		struct idt_entry *entry = &idt_entries[i];
-		entry->low_offset = (uint32_t)isr_wrapper & 0xffff;
-		entry->selector = KERNEL_CS;
-		entry->zero = 0x00;
-		entry->type_attributes = 0x8E;
-		entry->high_offset = (uint32_t)isr_wrapper >> 16;
+		idt_set_entry(&idt_entries[i], addr);
 	}
 	/* lidt */
 	__asm__ ("lidt %0" : : "m"(idtr));

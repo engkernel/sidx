@@ -42,7 +42,7 @@ static void kputs(int level, char* str)
 		kputc(level, str[i]);
 }
 
-void static __print_udec32(int level, uint32_t num)
+static void __print_udec32(int level, uint32_t num)
 {
 	char buf[11];
 
@@ -65,7 +65,7 @@ void static __print_udec32(int level, uint32_t num)
 	}
 }
 
-void static __print_udec64(int level, uint64_t num)
+static void __print_udec64(int level, uint64_t num)
 {
 	// char buf[21];
 
@@ -143,33 +143,33 @@ void static __print_dec64(int level, int32_t num)
 	}
 }
 
-void static __print_hex32(int level, uint64_t num)
+static void __print_hex32(int level, uint64_t num)
 {
 	char hex_chars[] = "0123456789abcdef";
 	for (int i = 28; i >= 0; i -= 4)
 		kputc(level, hex_chars[(num >> i) & 0xF]);
 }
 
-void static __print_hex64(int level, uint64_t num)
+static void __print_hex64(int level, uint64_t num)
 {
 	char hex_chars[] = "0123456789abcdef";
 	for (int i = 60; i >= 0; i -= 4)
-		kputc(level, hex_chars[(num >> i) & 0xF]);
+		kputc(level, hex_chars[(num >> i) & 0xf]);
 }
 
-void static __print_ptr32(int level, void* ptr)
+static void __print_ptr32(int level, void* ptr)
 {
 	kputs(level, "0x");
 	__print_hex32(level,(uint32_t)(uintptr_t)ptr);
 }
 
-void static __print_ptr64(int level, void* ptr)
+static void __print_ptr64(int level, void* ptr)
 {
 	kputs(level, "0x");
 	__print_hex64(level,(uint64_t)(uintptr_t)ptr);
 }
 
-void static __printf(int level, const char *fmt, va_list args)
+static void __printf(int level, const char *fmt, va_list args)
 {
 	while(*fmt)
 	{

@@ -2,4 +2,4 @@
 
 make clean
 make
-qemu-system-i386 -drive format=raw,file=build/os.bin
+qemu-system-x86_64 -drive format=raw,file=build/os.bin
