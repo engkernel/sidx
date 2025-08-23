@@ -24,4 +24,5 @@ SECTIONS
 		*(COMM)
 		*(.bss)
 	}
+	__KERNEL_PHYS_END = .;
 }
