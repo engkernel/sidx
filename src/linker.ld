@@ -1,10 +1,11 @@
+OUTPUT_FORMAT("elf32-i386")
 ENTRY(_start)
-OUTPUT_FORMAT(binary)
 SECTIONS
 {
 	. = 1M;
 	.text : ALIGN(4096)
 	{
+		KEEP(*(.text.boot))
 		*(.text)
 	}
 
@@ -17,12 +18,11 @@ SECTIONS
 	{
 		*(.data)
 	}
-
+	
 	.bss : ALIGN(4096)
 	{
 		*(COMM)
 		*(.bss)
 	}
-
-	kernel_end_phys = .;
+	__KERNEL_PHYS_END = .;
 }

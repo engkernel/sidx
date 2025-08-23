@@ -1,4 +1,5 @@
 #!/bin/bash
 
-scripts/build.sh
-scripts/qemu_run.sh
+make clean
+make
+qemu-system-x86_64 -m 1G -drive format=raw,file=build/os.bin

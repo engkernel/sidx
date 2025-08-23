@@ -1,8 +1,0 @@
-{
-    "files.associations": {
-        "tss.h": "c",
-        "paging.h": "c",
-        "buddy.h": "c",
-        "gdt.h": "c"
-    }
-}
