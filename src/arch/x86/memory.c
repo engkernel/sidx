@@ -81,7 +81,6 @@ struct e820_entry* e820_get_memmap()
 	{
 		if (entries[i].type == 1) 
 		{
-			kinfo("entries base is %lx", entries[i].base);
 			if (entries[i].base <= KERNEL_PHYS_END && 
 					entries[i].base + entries[i].len > KERNEL_PHYS_END)
 			{
@@ -110,18 +109,18 @@ static inline void clear_frame(uint32_t frame)
 
 static inline int test_frame(uint32_t frame)
 {
-	return frame_bitmap[frame / 8] & (1 << (frame % 8));
+	return (frame_bitmap[frame / 8] & (1 << (frame % 8))) != 0;
 }
 
 uint32_t frame_alloc()
 {
 	/* frame_table->total set in frame_init */
-	for (uint32_t i = 0; i < frame_table->total; i++)
+	for (int i = 0; i < frame_table->total; i++)
 	{
 		if (!test_frame(i))
 		{
 			set_frame(i);
-			return i;
+			return frame_table->start + (i * FRAME_SIZE);
 		}
 	}
 	return (uint32_t)-1;
@@ -135,7 +134,7 @@ void free_frame(uint32_t frame)
 /* frame initialize */
 void frame_init(struct e820_entry* entry)
 {			
-	uint64_t phys_end;
+	uint64_t phys_start, phys_end;
 	uint32_t total_frames;
 
 	memset(frame_table, 0, sizeof(struct frame_table));
@@ -143,14 +142,23 @@ void frame_init(struct e820_entry* entry)
 	if (!entry)
 		kpanic("entry for frame init is NULL");
 
-	phys_end = (entry->base < KERNEL_PHYS_END) 
-			? ((KERNEL_PHYS_END + 0xfff) & ~0xfff)
-			: ((entry->base + 0xfff) & ~0xfff);			
-	frame_table->start = entry->base;
-	total_frames = ((phys_end - entry->base ) + FRAME_SIZE -1) / FRAME_SIZE;
+	phys_start = (entry->base < KERNEL_PHYS_END)
+		? ((KERNEL_PHYS_END + FRAME_SIZE -1) & ~(FRAME_SIZE -1))
+		: ((entry->base + FRAME_SIZE - 1) & ~(FRAME_SIZE -1));
 
+	phys_end = (entry->base + entry->len) & ~(FRAME_SIZE - 1);
+
+	if (phys_end <= phys_start)
+		kpanic("invalid frame range");
+	
+	frame_table->start = phys_start;;
+	total_frames = (phys_end - phys_start) / FRAME_SIZE;
+
+	kinfo("total frames that we gathered %d", total_frames);
 	/* at this point alloc_frame know what is its max index frame */
 	frame_table->total = total_frames;
+	for (int i = 0; i < (MAX_FRAMES/8); i++)
+		clear_frame(i);
 }
 
 /* paging */
