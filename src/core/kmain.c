@@ -4,7 +4,7 @@
 
 void kmain()
 {
-	int *buf;
+	int *buf, *tmp;
 	arch_init();	
 	kinfo("hello world");
 	buf = kmalloc(32);
@@ -15,6 +15,13 @@ void kmain()
 	buf[1] = 32;
 	buf[2] = 23;
 	buf[3] = 3;
-	kinfo("buffer is %d %d %d %d", buf[0], buf[1], buf[2], buf[3]);
+	kinfo("buffer is %x %x %x %x", &buf[0], &buf[1], &buf[2], &buf[3]);
+
+	tmp = kmalloc(54);
+	kinfo("tmp %x", tmp);
+	kfree(buf);
+
+	buf = kmalloc(4);
+	kinfo("buf %x", buf);
 	while(1){}
 }

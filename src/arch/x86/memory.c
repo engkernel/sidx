@@ -2,6 +2,7 @@
 #include "include/log.h"
 #include "include/string.h"
 
+#include <stdbool.h>
 #include <stddef.h>
 
 /* ====================== Definitions ===================== */
@@ -39,12 +40,15 @@ uint8_t frame_bitmap[MAX_FRAMES / 8];
 /* paging normally would be after heap but I think its better provide basic 
  * paging for heap so we do not get engaged into frame managements and etc.
  */
-#define PAGING_TOTAL_PG_DIR	1024
-uint32_t page_directory[PAGING_TOTAL_PG_DIR];
+#define PAGING_PAGE_SIZE	4096
+#define PAGING_TOTAL_ENTRIES	1024
 
 #define PAGING_PAGE_PRESENT	0x1
 #define PAGING_PAGE_RW		0x2
 #define PAGING_PAGE_USER	0x4
+
+__attribute__((aligned(PAGING_PAGE_SIZE))) uint32_t page_directory[PAGING_TOTAL_ENTRIES];
+__attribute__((aligned(PAGING_PAGE_SIZE))) uint32_t first_page_table[PAGING_TOTAL_ENTRIES];
 
 /* heap management */
 /* at start for our microkernel 16 MB or 4096 frame page (4KB each frame) */
@@ -63,7 +67,7 @@ uint32_t page_directory[PAGING_TOTAL_PG_DIR];
 
 /* each entry is 128b */
 static uint8_t heap_bitmap[HEAP_TOTAL_ENTRIES];
-static uint32_t heap_start = KERNEL_VIRT_BASE;
+#define HEAP_START KERNEL_VIRT_BASE
 
 struct heap_header 
 {
@@ -172,19 +176,105 @@ static inline void* virt_to_phys(uint32_t virt)
 	return (void*)(uint32_t)virt - KERNEL_VIRT_BASE;
 }
 
+void paging_init()
+{
+	uint32_t cr0;
+
+	for (int i = 0; i < PAGING_TOTAL_ENTRIES; i++)
+	{
+		page_directory[i] = 0x00000002; // not present, RW
+	}
+
+	for (uint32_t addr = 0; addr < 0x00400000; addr += PAGING_PAGE_SIZE)
+	{
+		first_page_table[addr/PAGING_PAGE_SIZE] = addr | PAGING_PAGE_PRESENT | PAGING_PAGE_RW;
+	}
+
+	uint32_t pt_phys = (uint32_t)first_page_table;
+	page_directory[0] = pt_phys | PAGING_PAGE_PRESENT | PAGING_PAGE_RW;
+
+	/* consider heap PDE now */
+	page_directory[HEAP_START_PDE_IDX] = 0x00000002; // not present, RW
+
+	/* load CR3 with page directory */
+	__asm__ volatile("mov %0, %%cr3" :: "r"(page_directory));
+
+	/* enable paging */
+	__asm__ volatile("mov %%cr0, %0" : "=r"(cr0));
+	cr0 |= 0x80000000;
+	__asm__ volatile("mov %0, %%cr0" :: "r"(cr0));
+}
+
+void map_page(uint32_t virt, uint32_t phys, uint32_t flags)
+{
+	uint32_t dir_idx; 
+	uint32_t tbl_idx;
+	uint32_t* page_table;
+	uint32_t pt_phys;
+
+	// 1. directory index and table index
+	dir_idx	= (virt >> 22) & 0x3ff;
+	tbl_idx	= (virt >> 12) & 0x3ff;
+
+	// 2. get PDE
+	if (page_directory[dir_idx] & PAGING_PAGE_PRESENT)
+	{
+		page_table = (uint32_t*)(page_directory[dir_idx] & ~0xfff);
+	} 
+	else
+	{
+		// allocate new page table
+		pt_phys = frame_alloc();
+		page_table = (uint32_t*)phys_to_virt(pt_phys);
+		memset(page_table, 0, PAGING_PAGE_SIZE);
+
+		// add to page directory
+		page_directory[dir_idx] = pt_phys | PAGING_PAGE_PRESENT | PAGING_PAGE_RW;
+	}
+
+	// 3. add mapping to page table
+	page_table[tbl_idx] = (phys & ~0xfff) | (flags & 0xfff);
+
+	// 4. invalidate TBL for this page
+	__asm__ volatile("invlpg (%0)" :: "r"(virt) : "memory");
+}
+
+bool is_mapped(uint32_t virt_addr)
+{
+	uint32_t dir_idx = (virt_addr >> 22) & 0x3ff;
+	uint32_t tbl_idx = (virt_addr >> 12) & 0x3ff;
+	
+	uint32_t pde = page_directory[dir_idx];
+	if (!(pde & 0x1))
+		return false;
+
+	uint32_t* page_table = (uint32_t*)phys_to_virt(pde & 0xfffff000);
+
+	uint32_t pte = page_table[tbl_idx];
+	return (pte & 0x1) != 0; // present bit set?
+}
+
+#define HEAP_TEMP_VIRT 0x003f0000
 /* heap initialize */
 void heap_init() 
 {
-	/* we assign 4 frame for addressing 16 MB */
-	for (int i = 0; i < HEAP_MAX_INIT_FRAME; i++)
-	{
-		uint32_t pt_frame = frame_alloc();
-		if (!pt_frame) 
-			kpanic("cannot allocate frame for heap init");
-		memset((void*)phys_to_virt(pt_frame), 0, FRAME_SIZE);
-		
-		page_directory[HEAP_START_PDE_IDX+i] = pt_frame | PAGING_PAGE_PRESENT |PAGING_PAGE_RW;
-	}
+	uint32_t pt_phys = frame_alloc();
+	uint32_t* pt_virt = (uint32_t*)HEAP_TEMP_VIRT;
+
+	memset(pt_virt, 0, PAGING_PAGE_SIZE);
+
+	page_directory[HEAP_START_PDE_IDX] = pt_phys | PAGING_PAGE_PRESENT | PAGING_PAGE_RW;
+
+	uint32_t phys = frame_alloc();
+	pt_virt[0] = phys | PAGING_PAGE_PRESENT | PAGING_PAGE_RW;
+
+}
+
+void* grow_heap(uint32_t virt_addr)
+{
+	uint32_t phys = frame_alloc();
+	map_page(virt_addr, phys, PAGING_PAGE_PRESENT | PAGING_PAGE_RW);
+	return (void*)virt_addr;
 }
 
 void* kmalloc(size_t size)
@@ -208,12 +298,28 @@ void* kmalloc(size_t size)
 
 			if (free_count == total_blocks)
 			{
-				for (size_t j = start_idx; j < start_idx + blocks_needed; j++)
+				for (size_t j = start_idx; j < start_idx + total_blocks; j++)
 					heap_bitmap[j] = HEAP_BLOCK_TAKEN;
 
+				uintptr_t virt_addr = HEAP_START+(start_idx * HEAP_PAGE_SIZE);
+				for (size_t j = 0; j < total_blocks; j++)
+				{
+					uintptr_t v = virt_addr + j * HEAP_PAGE_SIZE;
+
+					if (!is_mapped(v))
+					{
+						uint32_t phys = frame_alloc();
+						if (phys == (uint32_t)-1)
+							return NULL;
+						map_page(v, phys, PAGING_PAGE_PRESENT | PAGING_PAGE_RW);
+					}
+				}
+
 				struct heap_header* hdr =
-					(struct heap_header*)(heap_start + start_idx * HEAP_PAGE_SIZE);
+					(struct heap_header*)virt_addr;
 				hdr->blocks = total_blocks;
+				kinfo("hdr addr %x", hdr);
+				kinfo("kmalloc hdr->blocks %d and total blocks %d", hdr->blocks, total_blocks);
 
 				return (void*)((uintptr_t)hdr + sizeof(struct heap_header));
 			}
@@ -232,11 +338,10 @@ void kfree(void* ptr)
 
 	struct heap_header* hdr = (struct heap_header*)((uintptr_t)ptr - sizeof(struct heap_header));
 	size_t blocks = hdr->blocks;
+	size_t start_idx = ((uintptr_t)hdr - HEAP_START) / HEAP_PAGE_SIZE;
 
-	size_t start_idx = ((uintptr_t)hdr - heap_start) / HEAP_PAGE_SIZE;
-
-	for (size_t j = start_idx; j < start_idx + blocks; j++)
-		heap_bitmap[j] = HEAP_BLOCK_FREE;
+	for (size_t j = 0; j < blocks; j++)
+		heap_bitmap[start_idx+j] = HEAP_BLOCK_FREE;
 }
 
 /* mem, heap, paging initialization */
@@ -249,6 +354,10 @@ void mem_init()
 	
 	frame_init(entry);
 
+	/* paging */
+	paging_init();
+
 	/* frame is ready to be used in heap now */
 	heap_init();
+
 }
