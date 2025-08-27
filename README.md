@@ -1,4 +1,6 @@
 # sidx (serve the machine need)
+## Fix Required
+- I need to handle high half kernel from start, so paging and setup other objects are easier to manage.
 ### Experimenting with low level concepts of kernel
 - x86
 - clang-19
