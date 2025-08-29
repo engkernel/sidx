@@ -3,6 +3,7 @@ ENTRY(_start)
 SECTIONS
 {
 	. = 1M;
+	__KERNEL_PHYS_START = .;
 	.text : ALIGN(4096)
 	{
 		KEEP(*(.text.boot))
